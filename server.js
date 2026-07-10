@@ -10,6 +10,20 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  const startedAt = process.hrtime.bigint();
+  const timestamp = new Date().toISOString();
+
+  res.on("finish", () => {
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+
+    console.log(
+      `${timestamp} ${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs.toFixed(1)}ms`
+    );
+  });
+
+  next();
+});
 app.use("/api/properties", createPropertiesRouter(pool));
 
 app.get("/api/health", async (req, res) => {
