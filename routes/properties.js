@@ -2,6 +2,7 @@ const express = require("express");
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const MAX_LISTING_ID_LENGTH = 64;
 
 const columns = {
   city: process.env.PROPERTY_CITY_COLUMN || "L_City",
@@ -71,6 +72,24 @@ function parseString(value, name) {
   }
 
   return parsed;
+}
+
+function validateListingId(value) {
+  const listingId = String(value || "").trim();
+
+  if (!listingId) {
+    throw new Error("listing ID is required");
+  }
+
+  if (listingId.length > MAX_LISTING_ID_LENGTH) {
+    throw new Error(`listing ID must be ${MAX_LISTING_ID_LENGTH} characters or fewer`);
+  }
+
+  if (!/^[A-Za-z0-9_-]+$/.test(listingId)) {
+    throw new Error("listing ID may only contain letters, numbers, underscores, or hyphens");
+  }
+
+  return listingId;
 }
 
 function validateQuery(query) {
@@ -154,6 +173,98 @@ function buildPropertiesQuery(rawQuery) {
   };
 }
 
+function buildPropertyByIdQuery(rawListingId) {
+  const listingId = validateListingId(rawListingId);
+
+  return {
+    sql: "SELECT * FROM rets_property WHERE L_ListingID = ? LIMIT 1",
+    values: [listingId],
+    listingId,
+  };
+}
+
+function buildOpenHousesByPropertyIdQuery(rawListingId) {
+  const listingId = validateListingId(rawListingId);
+
+  return {
+    propertySql: "SELECT L_ListingID FROM rets_property WHERE L_ListingID = ? LIMIT 1",
+    propertyValues: [listingId],
+    openHousesSql: `
+      SELECT *
+      FROM rets_openhouse
+      WHERE L_ListingID = ?
+      ORDER BY OpenHouseDate ASC, OH_StartTime ASC
+    `,
+    openHousesValues: [listingId],
+    listingId,
+  };
+}
+
+async function getPropertyByIdResult(pool, rawListingId) {
+  let query;
+
+  try {
+    query = buildPropertyByIdQuery(rawListingId);
+  } catch (error) {
+    return { status: 400, body: { error: error.message } };
+  }
+
+  try {
+    const [properties] = await pool.query(query.sql, query.values);
+
+    if (!properties.length) {
+      return {
+        status: 404,
+        body: { error: `Property ${query.listingId} was not found` },
+      };
+    }
+
+    return { status: 200, body: properties[0] };
+  } catch (error) {
+    console.error("Property lookup failed:", error.message);
+
+    return {
+      status: 500,
+      body: { error: "Failed to load property" },
+    };
+  }
+}
+
+async function getOpenHousesByPropertyIdResult(pool, rawListingId) {
+  let query;
+
+  try {
+    query = buildOpenHousesByPropertyIdQuery(rawListingId);
+  } catch (error) {
+    return { status: 400, body: { error: error.message } };
+  }
+
+  try {
+    const [properties] = await pool.query(query.propertySql, query.propertyValues);
+
+    if (!properties.length) {
+      return {
+        status: 404,
+        body: { error: `Property ${query.listingId} was not found` },
+      };
+    }
+
+    const [openHouses] = await pool.query(
+      query.openHousesSql,
+      query.openHousesValues
+    );
+
+    return { status: 200, body: openHouses };
+  } catch (error) {
+    console.error("Open house lookup failed:", error.message);
+
+    return {
+      status: 500,
+      body: { error: "Failed to load open houses" },
+    };
+  }
+}
+
 function createPropertiesRouter(pool) {
   const router = express.Router();
 
@@ -185,10 +296,27 @@ function createPropertiesRouter(pool) {
     }
   });
 
+  router.get("/:id/openhouses", async (req, res) => {
+    const result = await getOpenHousesByPropertyIdResult(pool, req.params.id);
+
+    return res.status(result.status).json(result.body);
+  });
+
+  router.get("/:id", async (req, res) => {
+    const result = await getPropertyByIdResult(pool, req.params.id);
+
+    return res.status(result.status).json(result.body);
+  });
+
   return router;
 }
 
 module.exports = {
+  buildOpenHousesByPropertyIdQuery,
+  buildPropertyByIdQuery,
   buildPropertiesQuery,
   createPropertiesRouter,
+  getOpenHousesByPropertyIdResult,
+  getPropertyByIdResult,
+  validateListingId,
 };
