@@ -1,0 +1,231 @@
+.listings-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 56px;
+}
+
+.page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.result-count {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.property-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.property-card:hover {
+  border-color: rgba(42, 111, 151, 0.45);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+  transform: translateY(-3px);
+}
+
+.property-photo {
+  align-items: center;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #e8eef2, #f8fafc);
+  color: #64748b;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.property-photo img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.photo-fallback {
+  display: none;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.property-photo.is-empty .photo-fallback {
+  display: inline;
+}
+
+.property-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.property-price {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.property-card h2 {
+  color: var(--text);
+  display: -webkit-box;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0 0 6px;
+  min-height: 40px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.property-location {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.property-facts {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding-top: 12px;
+}
+
+.property-facts div {
+  min-width: 0;
+}
+
+.property-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.property-facts dd {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 900;
+  margin: 2px 0 0;
+}
+
+.state-panel {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  font-weight: 800;
+  gap: 14px;
+  justify-content: center;
+  min-height: 260px;
+  padding: 32px;
+}
+
+.loading-spinner {
+  animation: spin 800ms linear infinite;
+  border: 4px solid #d6dee5;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  height: 42px;
+  width: 42px;
+}
+
+.error-panel {
+  color: #9f1239;
+}
+
+.error-panel button {
+  background: var(--accent);
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 10px 16px;
+}
+
+.error-panel button:hover {
+  background: #1f5d7f;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .property-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .page-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .result-count {
+    white-space: normal;
+  }
+
+  .property-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .listings-page {
+    width: min(100% - 20px, 1180px);
+    padding-top: 24px;
+  }
+
+  .property-grid {
+    grid-template-columns: 1fr;
+  }
+}
