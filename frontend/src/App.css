@@ -30,6 +30,92 @@
   white-space: nowrap;
 }
 
+.property-filters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  margin-bottom: 24px;
+  padding: 18px;
+}
+
+.filter-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.property-filters label {
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 6px;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.property-filters input,
+.property-filters select {
+  appearance: none;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+  min-height: 42px;
+  outline: none;
+  padding: 10px 12px;
+  text-transform: none;
+  width: 100%;
+}
+
+.property-filters input:focus,
+.property-filters select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(42, 111, 151, 0.14);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.filter-actions button {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+  min-height: 40px;
+  padding: 9px 16px;
+}
+
+.filter-actions button:hover:not(:disabled) {
+  background: #1f5d7f;
+}
+
+.filter-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.filter-actions .secondary-button {
+  background: white;
+  color: var(--accent);
+}
+
+.filter-actions .secondary-button:hover:not(:disabled) {
+  background: #eef6fa;
+}
+
 .property-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -176,6 +262,10 @@
   color: #9f1239;
 }
 
+.empty-panel {
+  color: var(--muted);
+}
+
 .error-panel button {
   background: var(--accent);
   border: 0;
@@ -199,6 +289,10 @@
 }
 
 @media (max-width: 1100px) {
+  .filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .property-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -214,6 +308,10 @@
     white-space: normal;
   }
 
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .property-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -223,6 +321,15 @@
   .listings-page {
     width: min(100% - 20px, 1180px);
     padding-top: 24px;
+  }
+
+  .filter-actions,
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    flex-direction: column;
   }
 
   .property-grid {
