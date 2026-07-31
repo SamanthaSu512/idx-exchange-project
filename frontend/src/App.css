@@ -122,6 +122,68 @@
   gap: 18px;
 }
 
+.pagination {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 8px;
+}
+
+.page-button,
+.page-number {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 13px;
+}
+
+.page-number {
+  min-width: 40px;
+}
+
+.page-button:hover:not(:disabled),
+.page-number:hover:not(.is-active) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.page-number.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.page-button:disabled {
+  color: #a0a8b4;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.page-ellipsis {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 26px;
+}
+
 .property-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -314,6 +376,16 @@
 
   .property-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 
