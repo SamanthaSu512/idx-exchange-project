@@ -33,3 +33,7 @@ export function fetchProperties(params = {}) {
 export function fetchPropertyDetail(id) {
   return requestJson(`/api/properties/${encodeURIComponent(id)}`);
 }
+
+export function fetchPropertyOpenHouses(id) {
+  return requestJson(`/api/properties/${encodeURIComponent(id)}/openhouses`);
+}

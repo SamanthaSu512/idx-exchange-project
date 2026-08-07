@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchProperties } from '../api/client';
 import Pagination from '../components/Pagination';
 import PropertyFilters from '../components/PropertyFilters';
@@ -117,7 +118,13 @@ export default function ListingsPage() {
         <>
           <section className="property-grid" aria-label={resultSummary}>
             {properties.map((property) => (
-              <PropertyCard key={property.L_ListingID || property.id} property={property} />
+              <Link
+                className="property-card-link"
+                key={property.L_ListingID || property.id}
+                to={`/property/${encodeURIComponent(property.L_ListingID)}`}
+              >
+                <PropertyCard property={property} />
+              </Link>
             ))}
           </section>
           <Pagination

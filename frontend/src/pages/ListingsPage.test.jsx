@@ -1,6 +1,7 @@
 import { act } from 'react';
 import { Simulate } from 'react-dom/test-utils';
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import { fetchProperties } from '../api/client';
 import ListingsPage from './ListingsPage';
 
@@ -29,7 +30,11 @@ async function renderListingsPage() {
   const root = createRoot(container);
 
   await act(async () => {
-    root.render(<ListingsPage />);
+    root.render(
+      <MemoryRouter>
+        <ListingsPage />
+      </MemoryRouter>,
+    );
   });
 
   return {

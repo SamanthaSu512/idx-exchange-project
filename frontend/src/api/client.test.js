@@ -1,4 +1,4 @@
-import { fetchProperties, fetchPropertyDetail } from './client';
+import { fetchProperties, fetchPropertyDetail, fetchPropertyOpenHouses } from './client';
 
 describe('api client', () => {
   beforeEach(() => {
@@ -60,5 +60,16 @@ describe('api client', () => {
     await fetchPropertyDetail('abc 123');
 
     expect(global.fetch).toHaveBeenCalledWith('/api/properties/abc%20123');
+  });
+
+  test('fetchPropertyOpenHouses requests the nested endpoint', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    });
+
+    await fetchPropertyOpenHouses('abc 123');
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/properties/abc%20123/openhouses');
   });
 });

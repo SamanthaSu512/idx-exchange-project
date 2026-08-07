@@ -1,59 +1,9 @@
-const numberFormatter = new Intl.NumberFormat('en-US');
-const priceFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-});
-
-function formatPrice(value) {
-  if (value === null || value === undefined || value === '') {
-    return 'Price unavailable';
-  }
-
-  return priceFormatter.format(Number(value));
-}
-
-function formatNumber(value, fallback = 'N/A') {
-  if (value === null || value === undefined || value === '') {
-    return fallback;
-  }
-
-  return numberFormatter.format(Number(value));
-}
-
-function parseFirstPhoto(photosValue) {
-  if (!photosValue) {
-    return null;
-  }
-
-  if (Array.isArray(photosValue)) {
-    return typeof photosValue[0] === 'string' && photosValue[0] ? photosValue[0] : null;
-  }
-
-  if (typeof photosValue !== 'string') {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(photosValue);
-
-    if (!Array.isArray(parsed)) {
-      return null;
-    }
-
-    return typeof parsed[0] === 'string' && parsed[0] ? parsed[0] : null;
-  } catch {
-    return null;
-  }
-}
-
-function handleImageError(event) {
-  event.currentTarget.hidden = true;
-  event.currentTarget.parentElement?.classList.add('is-empty');
-}
+import PropertyImageCarousel from './PropertyImageCarousel';
+import { formatNumber, formatPrice } from '../utils/formatters';
+import { parsePhotoUrls } from '../utils/photos';
 
 export default function PropertyCard({ property }) {
-  const photoUrl = parseFirstPhoto(property.L_Photos);
+  const photoUrls = parsePhotoUrls(property.L_Photos);
   const cityState = [property.L_City, property.L_State].filter(Boolean).join(', ');
   const address = property.L_Address || 'Address unavailable';
   const beds = formatNumber(property.L_Keyword2);
@@ -62,12 +12,7 @@ export default function PropertyCard({ property }) {
 
   return (
     <article className="property-card">
-      <div className={`property-photo ${photoUrl ? '' : 'is-empty'}`}>
-        {photoUrl ? (
-          <img src={photoUrl} alt={address} loading="lazy" onError={handleImageError} />
-        ) : null}
-        <span className="photo-fallback">No photo</span>
-      </div>
+      <PropertyImageCarousel alt={address} photos={photoUrls} />
 
       <div className="property-body">
         <div>
