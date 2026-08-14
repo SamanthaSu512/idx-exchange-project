@@ -25,6 +25,24 @@ describe('api client', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/properties?city=Manteca&minPrice=300000&beds=3');
   });
 
+  test('fetchProperties includes sorting parameters', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ total: 1, results: [] }),
+    });
+
+    await fetchProperties({
+      sortBy: 'price',
+      sortOrder: 'desc',
+      limit: 20,
+      offset: 0,
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/properties?sortBy=price&sortOrder=desc&limit=20&offset=0',
+    );
+  });
+
   test('fetchProperties omits empty values', async () => {
     global.fetch.mockResolvedValue({
       ok: true,
