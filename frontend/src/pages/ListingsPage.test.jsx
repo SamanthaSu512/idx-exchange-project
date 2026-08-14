@@ -31,7 +31,7 @@ async function renderListingsPage() {
 
   await act(async () => {
     root.render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <ListingsPage />
       </MemoryRouter>,
     );
@@ -64,6 +64,7 @@ function changeField(container, name, value) {
 
 describe('ListingsPage pagination', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     window.scrollTo = jest.fn();
     fetchProperties.mockResolvedValue({
       total: 45,
@@ -99,6 +100,81 @@ describe('ListingsPage pagination', () => {
       limit: 20,
       offset: 0,
     });
+
+    cleanup();
+  });
+
+  test('sort persists across page changes and resets when filters change', async () => {
+    const { container, cleanup } = await renderListingsPage();
+
+    await act(async () => {
+      Simulate.change(container.querySelector('[name="sortBy"]'), {
+        target: { value: 'price' },
+      });
+    });
+
+    await act(async () => {
+      Simulate.change(container.querySelector('[name="sortOrder"]'), {
+        target: { value: 'desc' },
+      });
+    });
+
+    expect(fetchProperties).toHaveBeenLastCalledWith({
+      sortBy: 'price',
+      sortOrder: 'desc',
+      limit: 20,
+      offset: 0,
+    });
+
+    await act(async () => {
+      Simulate.click(getButton(container, '2'));
+    });
+
+    expect(fetchProperties).toHaveBeenLastCalledWith({
+      sortBy: 'price',
+      sortOrder: 'desc',
+      limit: 20,
+      offset: 20,
+    });
+
+    changeField(container, 'city', 'Manteca');
+
+    await act(async () => {
+      Simulate.submit(container.querySelector('form'));
+    });
+
+    expect(fetchProperties).toHaveBeenLastCalledWith({
+      city: 'Manteca',
+      limit: 20,
+      offset: 0,
+    });
+
+    cleanup();
+  });
+
+  test('favorites persist and the favorites view removes unfavorited properties immediately', async () => {
+    const { container, cleanup } = await renderListingsPage();
+    const favoriteButton = container.querySelector('.favorite-button');
+
+    await act(async () => {
+      Simulate.click(favoriteButton);
+    });
+
+    expect(container.textContent).toContain('Favorites (1)');
+    expect(JSON.parse(window.localStorage.getItem('idx-exchange-favorites'))).toHaveLength(1);
+
+    await act(async () => {
+      Simulate.click(getButton(container, 'Favorites (1)'));
+    });
+
+    expect(container.textContent).toContain('1 saved property');
+
+    await act(async () => {
+      Simulate.click(container.querySelector('.favorite-button'));
+    });
+
+    expect(container.textContent).toContain('No favorites saved yet');
+    expect(container.textContent).toContain('Favorites (0)');
 
     cleanup();
   });

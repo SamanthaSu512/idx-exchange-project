@@ -1,29 +1,48 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { fetchProperties } from '../api/client';
 import Pagination from '../components/Pagination';
 import PropertyFilters from '../components/PropertyFilters';
 import PropertyCard from '../components/PropertyCard';
+import SortControls from '../components/SortControls';
+import useFavorites from '../hooks/useFavorites';
 
 const INITIAL_LIMIT = 20;
+const DEFAULT_SORT = {
+  sortBy: '',
+  sortOrder: 'asc',
+};
 
 export default function ListingsPage() {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(INITIAL_LIMIT);
   const [error, setError] = useState('');
   const [searchFilters, setSearchFilters] = useState({});
+  const [sort, setSort] = useState(DEFAULT_SORT);
+  const [activeView, setActiveView] = useState('listings');
   const [isLoading, setIsLoading] = useState(true);
+  const { favoriteCount, favorites, isFavorite, toggleFavorite } = useFavorites();
   const latestRequestId = useRef(0);
+  const isFavoritesView = activeView === 'favorites';
   const totalPages = Math.ceil(total / itemsPerPage);
   const firstResult = total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const lastResult = Math.min(currentPage * itemsPerPage, total);
-  const resultSummary = isLoading
+  const visibleProperties = isFavoritesView ? favorites : properties;
+  const resultSummary = isFavoritesView
+    ? `${favoriteCount} saved ${favoriteCount === 1 ? 'property' : 'properties'}`
+    : isLoading
     ? 'Loading properties...'
     : `Showing ${firstResult}-${lastResult} of ${total} properties`;
 
   useEffect(() => {
+    if (isFavoritesView) {
+      setIsLoading(false);
+      return;
+    }
+
     const requestId = latestRequestId.current + 1;
     latestRequestId.current = requestId;
 
@@ -36,6 +55,7 @@ export default function ListingsPage() {
       try {
         const data = await fetchProperties({
           ...searchFilters,
+          ...(sort.sortBy ? sort : {}),
           limit: itemsPerPage,
           offset: (currentPage - 1) * itemsPerPage,
         });
@@ -63,22 +83,36 @@ export default function ListingsPage() {
     }
 
     loadProperties();
-  }, [currentPage, itemsPerPage, searchFilters]);
+  }, [currentPage, isFavoritesView, itemsPerPage, searchFilters, sort]);
 
   const handleSearch = useCallback((filters) => {
     setCurrentPage(1);
+    setSort(DEFAULT_SORT);
     setSearchFilters(filters);
   }, []);
 
   const handleClear = useCallback(() => {
     setCurrentPage(1);
+    setSort(DEFAULT_SORT);
     setSearchFilters({});
+  }, []);
+
+  const handleSortChange = useCallback((nextSort) => {
+    setCurrentPage(1);
+    setSort(nextSort);
   }, []);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo(0, 0);
   }, []);
+
+  const handlePropertyOpen = useCallback(
+    (listingId) => {
+      navigate(`/property/${encodeURIComponent(listingId)}`);
+    },
+    [navigate],
+  );
 
   return (
     <main className="listings-page">
@@ -90,16 +124,43 @@ export default function ListingsPage() {
         <p className="result-count">{resultSummary}</p>
       </header>
 
-      <PropertyFilters isLoading={isLoading} onClear={handleClear} onSearch={handleSearch} />
+      <div className="view-tabs" role="tablist" aria-label="Listing views">
+        <button
+          type="button"
+          className={activeView === 'listings' ? 'is-active' : ''}
+          onClick={() => setActiveView('listings')}
+        >
+          All Listings
+        </button>
+        <button
+          type="button"
+          className={activeView === 'favorites' ? 'is-active' : ''}
+          onClick={() => setActiveView('favorites')}
+        >
+          Favorites ({favoriteCount})
+        </button>
+      </div>
 
-      {isLoading ? (
+      {!isFavoritesView ? (
+        <>
+          <PropertyFilters isLoading={isLoading} onClear={handleClear} onSearch={handleSearch} />
+          <SortControls
+            disabled={isLoading}
+            onChange={handleSortChange}
+            sortBy={sort.sortBy}
+            sortOrder={sort.sortOrder}
+          />
+        </>
+      ) : null}
+
+      {!isFavoritesView && isLoading ? (
         <section className="state-panel" aria-live="polite">
           <div className="loading-spinner" aria-hidden="true"></div>
           <p>Loading property data...</p>
         </section>
       ) : null}
 
-      {!isLoading && error ? (
+      {!isFavoritesView && !isLoading && error ? (
         <section className="state-panel error-panel" role="alert">
           <p>{error}</p>
           <button type="button" onClick={() => setSearchFilters((filters) => ({ ...filters }))}>
@@ -108,30 +169,36 @@ export default function ListingsPage() {
         </section>
       ) : null}
 
-      {!isLoading && !error && properties.length === 0 ? (
+      {!isLoading && !error && visibleProperties.length === 0 ? (
         <section className="state-panel empty-panel">
-          <p>No properties found. Try adjusting your filters.</p>
+          <p>
+            {isFavoritesView
+              ? 'No favorites saved yet. Heart a property to save it here.'
+              : 'No properties found. Try adjusting your filters.'}
+          </p>
         </section>
       ) : null}
 
-      {!isLoading && !error && properties.length > 0 ? (
+      {!isLoading && !error && visibleProperties.length > 0 ? (
         <>
           <section className="property-grid" aria-label={resultSummary}>
-            {properties.map((property) => (
-              <Link
-                className="property-card-link"
+            {visibleProperties.map((property) => (
+              <PropertyCard
+                isFavorite={isFavorite(property.L_ListingID || property.id)}
                 key={property.L_ListingID || property.id}
-                to={`/property/${encodeURIComponent(property.L_ListingID)}`}
-              >
-                <PropertyCard property={property} />
-              </Link>
+                onOpen={() => handlePropertyOpen(property.L_ListingID)}
+                onToggleFavorite={toggleFavorite}
+                property={property}
+              />
             ))}
           </section>
-          <Pagination
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            totalPages={totalPages}
-          />
+          {!isFavoritesView ? (
+            <Pagination
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+              totalPages={totalPages}
+            />
+          ) : null}
         </>
       ) : null}
     </main>
