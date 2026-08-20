@@ -13,6 +13,19 @@ const columns = {
 };
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const SORT_COLUMNS = {
+  price: "L_SystemPrice",
+  dateListed: "ListingContractDate",
+  sqft: "LM_Int2_3",
+  beds: "L_Keyword2",
+};
+const SORT_INDEXES = {
+  price: "idx_rets_property_price_beds",
+  dateListed: "idx_rets_property_listing_contract_date",
+  sqft: "idx_rets_property_sqft_listingid",
+  beds: "idx_rets_property_beds_listingid",
+};
+const SORT_ORDERS = new Set(["asc", "desc"]);
 
 function quoteIdentifier(identifier) {
   if (!IDENTIFIER_PATTERN.test(identifier)) {
@@ -24,6 +37,9 @@ function quoteIdentifier(identifier) {
 
 const quotedColumns = Object.fromEntries(
   Object.entries(columns).map(([key, value]) => [key, quoteIdentifier(value)])
+);
+const quotedSortColumns = Object.fromEntries(
+  Object.entries(SORT_COLUMNS).map(([key, value]) => [key, quoteIdentifier(value)])
 );
 
 function parseInteger(value, name, { min, max } = {}) {
@@ -74,6 +90,36 @@ function parseString(value, name) {
   return parsed;
 }
 
+function parseSortBy(value) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = String(value).trim();
+
+  if (!Object.prototype.hasOwnProperty.call(SORT_COLUMNS, parsed)) {
+    throw new Error(
+      `sortBy must be one of: ${Object.keys(SORT_COLUMNS).join(", ")}`
+    );
+  }
+
+  return parsed;
+}
+
+function parseSortOrder(value) {
+  if (value === undefined) {
+    return "asc";
+  }
+
+  const parsed = String(value).trim().toLowerCase();
+
+  if (!SORT_ORDERS.has(parsed)) {
+    throw new Error("sortOrder must be asc or desc");
+  }
+
+  return parsed;
+}
+
 function validateListingId(value) {
   const listingId = String(value || "").trim();
 
@@ -112,6 +158,8 @@ function validateQuery(query) {
     maxPrice,
     beds: parseInteger(query.beds, "beds", { min: 0 }),
     baths: parseInteger(query.baths, "baths", { min: 0 }),
+    sortBy: parseSortBy(query.sortBy),
+    sortOrder: parseSortOrder(query.sortOrder),
     limit,
     offset,
   };
@@ -157,11 +205,35 @@ function buildWhereClause(filters) {
   };
 }
 
+function buildOrderClause(filters) {
+  if (!filters.sortBy) {
+    return "";
+  }
+
+  const direction = filters.sortOrder === "desc" ? "DESC" : "ASC";
+
+  return ` ORDER BY ${quotedSortColumns[filters.sortBy]} ${direction}, L_ListingID ASC`;
+}
+
+function buildIndexHint(filters) {
+  if (!filters.sortBy) {
+    return "";
+  }
+
+  if (filters.city !== undefined && filters.sortBy === "price") {
+    return " FORCE INDEX (`idx_rets_property_city_price_listingid`)";
+  }
+
+  return ` FORCE INDEX (\`${SORT_INDEXES[filters.sortBy]}\`)`;
+}
+
 function buildPropertiesQuery(rawQuery) {
   const filters = validateQuery(rawQuery);
   const where = buildWhereClause(filters);
+  const order = buildOrderClause(filters);
+  const indexHint = buildIndexHint(filters);
   const countSql = `SELECT COUNT(*) AS total FROM rets_property${where.sql}`;
-  const dataSql = `SELECT * FROM rets_property${where.sql} LIMIT ? OFFSET ?`;
+  const dataSql = `SELECT * FROM rets_property${indexHint}${where.sql}${order} LIMIT ? OFFSET ?`;
 
   return {
     countSql,

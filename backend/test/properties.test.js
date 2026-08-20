@@ -69,6 +69,48 @@ test("builds multi-filter query without string-concatenating user values", () =>
   ]);
 });
 
+test("builds sorted property queries with whitelisted SQL columns", () => {
+  const priceLowToHigh = buildPropertiesQuery({
+    sortBy: "price",
+    sortOrder: "asc",
+  });
+  const priceHighToLow = buildPropertiesQuery({
+    sortBy: "price",
+    sortOrder: "desc",
+  });
+  const dateListed = buildPropertiesQuery({
+    sortBy: "dateListed",
+    sortOrder: "desc",
+  });
+
+  assert.match(
+    priceLowToHigh.dataSql,
+    /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` ASC, L_ListingID ASC LIMIT \? OFFSET \?/
+  );
+  assert.match(
+    priceHighToLow.dataSql,
+    /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+  );
+  assert.match(
+    dateListed.dataSql,
+    /FORCE INDEX \(`idx_rets_property_listing_contract_date`\).*ORDER BY `ListingContractDate` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+  );
+});
+
+test("uses the city plus price composite index for city price sorting", () => {
+  const query = buildPropertiesQuery({
+    city: "Beverly Hills",
+    sortBy: "price",
+    sortOrder: "asc",
+  });
+
+  assert.match(
+    query.dataSql,
+    /FORCE INDEX \(`idx_rets_property_city_price_listingid`\).*ORDER BY `L_SystemPrice` ASC/
+  );
+  assert.deepEqual(query.dataValues, ["Beverly Hills", 20, 0]);
+});
+
 test("rejects invalid query parameters with helpful messages", () => {
   assert.throws(
     () => buildPropertiesQuery({ minPrice: "abc" }),
@@ -81,6 +123,14 @@ test("rejects invalid query parameters with helpful messages", () => {
   assert.throws(
     () => buildPropertiesQuery({ limit: "200" }),
     /limit must be no greater than 100/
+  );
+  assert.throws(
+    () => buildPropertiesQuery({ sortBy: "DROP TABLE rets_property" }),
+    /sortBy must be one of/
+  );
+  assert.throws(
+    () => buildPropertiesQuery({ sortBy: "price", sortOrder: "sideways" }),
+    /sortOrder must be asc or desc/
   );
 });
 
