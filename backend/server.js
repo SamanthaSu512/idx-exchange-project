@@ -17,7 +17,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
 
-    console.log(
+    console.info(
       `${timestamp} ${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs.toFixed(1)}ms`
     );
   });
@@ -46,7 +46,7 @@ app.get("/api/health", async (req, res) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.info(`Server running on port ${PORT}`);
   });
 }
 
