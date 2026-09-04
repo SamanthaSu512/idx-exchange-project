@@ -3,6 +3,8 @@ export function parsePhotoUrls(photosValue) {
     return [];
   }
 
+  // MLS photo data is inconsistent: some rows are already arrays, some are JSON
+  // strings, and some are malformed, so parsing must fail closed to an empty list.
   const photoArray = Array.isArray(photosValue) ? photosValue : parsePhotoJson(photosValue);
 
   if (!Array.isArray(photoArray)) {

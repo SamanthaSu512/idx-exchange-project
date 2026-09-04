@@ -7,6 +7,8 @@ export function getPaginationItems(currentPage, totalPages) {
     return [];
   }
 
+  // The window changes near the start/end so the first and last page are never
+  // duplicated around the ellipsis.
   if (totalPages <= 7) {
     return range(1, totalPages);
   }
