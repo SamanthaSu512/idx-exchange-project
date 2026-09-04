@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">IDX property listings page screenshot placeholder</title>
+  <desc id="desc">A simplified screenshot-style preview of the property listings grid, filters, sorting controls, and pagination.</desc>
+  <rect width="1200" height="720" fill="#f5f7fb"/>
+  <rect x="64" y="44" width="1072" height="92" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+  <text x="96" y="88" font-family="Arial, sans-serif" font-size="18" fill="#64748b">IDX Exchange</text>
+  <text x="96" y="116" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#111827">Property Listings</text>
+  <text x="856" y="103" font-family="Arial, sans-serif" font-size="18" fill="#475569">Showing 1-20 of 487 properties</text>
+  <rect x="64" y="160" width="1072" height="90" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#334155">
+    <text x="92" y="194">City</text><rect x="92" y="204" width="150" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="262" y="194">ZIP code</text><rect x="262" y="204" width="130" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="412" y="194">Min price</text><rect x="412" y="204" width="130" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="562" y="194">Max price</text><rect x="562" y="204" width="130" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="712" y="194">Beds</text><rect x="712" y="204" width="90" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="822" y="194">Baths</text><rect x="822" y="204" width="90" height="30" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="942" y="202" width="80" height="34" rx="5" fill="#1f6fb2"/><text x="961" y="224" fill="#ffffff">Search</text>
+  </g>
+  <g>
+    <rect x="64" y="286" width="244" height="310" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+    <rect x="64" y="286" width="244" height="150" rx="8" fill="#dbeafe"/>
+    <rect x="96" y="320" width="180" height="86" rx="4" fill="#93c5fd"/>
+    <text x="88" y="478" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111827">$500,000</text>
+    <text x="88" y="514" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">100 Test Street</text>
+    <text x="88" y="548" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Manteca, CA</text>
+  </g>
+  <g>
+    <rect x="338" y="286" width="244" height="310" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+    <rect x="338" y="286" width="244" height="150" rx="8" fill="#dcfce7"/>
+    <rect x="370" y="320" width="180" height="86" rx="4" fill="#86efac"/>
+    <text x="362" y="478" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111827">$775,000</text>
+    <text x="362" y="514" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">582 Pasture Ave</text>
+    <text x="362" y="548" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Lathrop, CA</text>
+  </g>
+  <g>
+    <rect x="612" y="286" width="244" height="310" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+    <rect x="612" y="286" width="244" height="150" rx="8" fill="#fee2e2"/>
+    <rect x="644" y="320" width="180" height="86" rx="4" fill="#fca5a5"/>
+    <text x="636" y="478" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111827">$899,000</text>
+    <text x="636" y="514" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">12 Oak Court</text>
+    <text x="636" y="548" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Portland, OR</text>
+  </g>
+  <g>
+    <rect x="886" y="286" width="244" height="310" rx="8" fill="#ffffff" stroke="#d8dee8"/>
+    <rect x="886" y="286" width="244" height="150" rx="8" fill="#e0e7ff"/>
+    <rect x="918" y="320" width="180" height="86" rx="4" fill="#a5b4fc"/>
+    <text x="910" y="478" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111827">$1,250,000</text>
+    <text x="910" y="514" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">1461 Laurel Way</text>
+    <text x="910" y="548" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Beverly Hills, CA</text>
+  </g>
+  <rect x="426" y="632" width="348" height="44" rx="22" fill="#ffffff" stroke="#d8dee8"/>
+  <text x="462" y="660" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Previous</text>
+  <circle cx="572" cy="654" r="16" fill="#1f6fb2"/><text x="567" y="660" font-family="Arial, sans-serif" font-size="17" fill="#ffffff">1</text>
+  <text x="616" y="660" font-family="Arial, sans-serif" font-size="18" fill="#111827">2</text>
+  <text x="654" y="660" font-family="Arial, sans-serif" font-size="18" fill="#111827">3</text>
+  <text x="700" y="660" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Next</text>
+</svg>
