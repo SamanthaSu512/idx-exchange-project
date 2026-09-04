@@ -1,6 +1,3 @@
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
 const {
   buildOpenHousesByPropertyIdQuery,
   buildPropertyByIdQuery,
@@ -9,186 +6,169 @@ const {
   validateListingId,
 } = require("../routes/properties");
 
-test("builds default paginated property query", () => {
-  const query = buildPropertiesQuery({});
+describe("property query builders", () => {
+  test("builds default paginated property query", () => {
+    const query = buildPropertiesQuery({});
 
-  assert.equal(query.limit, 20);
-  assert.equal(query.offset, 0);
-  assert.equal(query.countSql, "SELECT COUNT(*) AS total FROM rets_property");
-  assert.equal(query.dataSql, "SELECT * FROM rets_property LIMIT ? OFFSET ?");
-  assert.deepEqual(query.countValues, []);
-  assert.deepEqual(query.dataValues, [20, 0]);
-});
-
-test("keeps combined minPrice and beds values aligned with placeholders", () => {
-  const query = buildPropertiesQuery({
-    city: "Portland",
-    minPrice: "300000",
-    beds: "3",
-    limit: "20",
-    offset: "0",
+    expect(query.limit).toBe(20);
+    expect(query.offset).toBe(0);
+    expect(query.countSql).toBe("SELECT COUNT(*) AS total FROM rets_property");
+    expect(query.dataSql).toBe("SELECT * FROM rets_property LIMIT ? OFFSET ?");
+    expect(query.countValues).toEqual([]);
+    expect(query.dataValues).toEqual([20, 0]);
   });
 
-  assert.match(query.countSql, /LOWER\(TRIM\(`L_City`\)\) = LOWER\(TRIM\(\?\)\)/);
-  assert.match(query.countSql, /`L_SystemPrice` >= \?/);
-  assert.match(query.countSql, /`L_Keyword2` >= \?/);
-  assert.deepEqual(query.countValues, ["Portland", 300000, 3]);
-  assert.deepEqual(query.dataValues, ["Portland", 300000, 3, 20, 0]);
-});
+  test("keeps combined minPrice and beds values aligned with placeholders", () => {
+    const query = buildPropertiesQuery({
+      city: "Portland",
+      minPrice: "300000",
+      beds: "3",
+      limit: "20",
+      offset: "0",
+    });
 
-test("builds multi-filter query without string-concatenating user values", () => {
-  const query = buildPropertiesQuery({
-    city: "Portland",
-    zipcode: "97201",
-    minPrice: "300000",
-    maxPrice: "800000",
-    beds: "3",
-    baths: "2",
-    limit: "10",
-    offset: "20",
+    expect(query.countSql).toMatch(/LOWER\(TRIM\(`L_City`\)\) = LOWER\(TRIM\(\?\)\)/);
+    expect(query.countSql).toMatch(/`L_SystemPrice` >= \?/);
+    expect(query.countSql).toMatch(/`L_Keyword2` >= \?/);
+    expect(query.countValues).toEqual(["Portland", 300000, 3]);
+    expect(query.dataValues).toEqual(["Portland", 300000, 3, 20, 0]);
   });
 
-  assert.equal((query.countSql.match(/\?/g) || []).length, 6);
-  assert.deepEqual(query.countValues, [
-    "Portland",
-    "97201",
-    300000,
-    800000,
-    3,
-    2,
-  ]);
-  assert.deepEqual(query.dataValues, [
-    "Portland",
-    "97201",
-    300000,
-    800000,
-    3,
-    2,
-    10,
-    20,
-  ]);
-});
+  test("builds multi-filter query without string-concatenating user values", () => {
+    const query = buildPropertiesQuery({
+      city: "Portland",
+      zipcode: "97201",
+      minPrice: "300000",
+      maxPrice: "800000",
+      beds: "3",
+      baths: "2",
+      limit: "10",
+      offset: "20",
+    });
 
-test("builds sorted property queries with whitelisted SQL columns", () => {
-  const priceLowToHigh = buildPropertiesQuery({
-    sortBy: "price",
-    sortOrder: "asc",
-  });
-  const priceHighToLow = buildPropertiesQuery({
-    sortBy: "price",
-    sortOrder: "desc",
-  });
-  const dateListed = buildPropertiesQuery({
-    sortBy: "dateListed",
-    sortOrder: "desc",
+    expect(query.countSql.match(/\?/g) || []).toHaveLength(6);
+    expect(query.countValues).toEqual([
+      "Portland",
+      "97201",
+      300000,
+      800000,
+      3,
+      2,
+    ]);
+    expect(query.dataValues).toEqual([
+      "Portland",
+      "97201",
+      300000,
+      800000,
+      3,
+      2,
+      10,
+      20,
+    ]);
   });
 
-  assert.match(
-    priceLowToHigh.dataSql,
-    /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` ASC, L_ListingID ASC LIMIT \? OFFSET \?/
-  );
-  assert.match(
-    priceHighToLow.dataSql,
-    /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
-  );
-  assert.match(
-    dateListed.dataSql,
-    /FORCE INDEX \(`idx_rets_property_listing_contract_date`\).*ORDER BY `ListingContractDate` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
-  );
-});
+  test("builds sorted property queries with whitelisted SQL columns", () => {
+    const priceLowToHigh = buildPropertiesQuery({
+      sortBy: "price",
+      sortOrder: "asc",
+    });
+    const priceHighToLow = buildPropertiesQuery({
+      sortBy: "price",
+      sortOrder: "desc",
+    });
+    const dateListed = buildPropertiesQuery({
+      sortBy: "dateListed",
+      sortOrder: "desc",
+    });
 
-test("uses the city plus price composite index for city price sorting", () => {
-  const query = buildPropertiesQuery({
-    city: "Beverly Hills",
-    sortBy: "price",
-    sortOrder: "asc",
+    expect(priceLowToHigh.dataSql).toMatch(
+      /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` ASC, L_ListingID ASC LIMIT \? OFFSET \?/
+    );
+    expect(priceHighToLow.dataSql).toMatch(
+      /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+    );
+    expect(dateListed.dataSql).toMatch(
+      /FORCE INDEX \(`idx_rets_property_listing_contract_date`\).*ORDER BY `ListingContractDate` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+    );
   });
 
-  assert.match(
-    query.dataSql,
-    /FORCE INDEX \(`idx_rets_property_city_price_listingid`\).*ORDER BY `L_SystemPrice` ASC/
-  );
-  assert.deepEqual(query.dataValues, ["Beverly Hills", 20, 0]);
-});
+  test("uses the city plus price composite index for city price sorting", () => {
+    const query = buildPropertiesQuery({
+      city: "Beverly Hills",
+      sortBy: "price",
+      sortOrder: "asc",
+    });
 
-test("rejects invalid query parameters with helpful messages", () => {
-  assert.throws(
-    () => buildPropertiesQuery({ minPrice: "abc" }),
-    /minPrice must be a valid non-negative price/
-  );
-  assert.throws(
-    () => buildPropertiesQuery({ limit: "0" }),
-    /limit must be at least 1/
-  );
-  assert.throws(
-    () => buildPropertiesQuery({ limit: "200" }),
-    /limit must be no greater than 100/
-  );
-  assert.throws(
-    () => buildPropertiesQuery({ sortBy: "DROP TABLE rets_property" }),
-    /sortBy must be one of/
-  );
-  assert.throws(
-    () => buildPropertiesQuery({ sortBy: "price", sortOrder: "sideways" }),
-    /sortOrder must be asc or desc/
-  );
-});
+    expect(query.dataSql).toMatch(
+      /FORCE INDEX \(`idx_rets_property_city_price_listingid`\).*ORDER BY `L_SystemPrice` ASC/
+    );
+    expect(query.dataValues).toEqual(["Beverly Hills", 20, 0]);
+  });
 
-test("builds property detail query by listing ID", () => {
-  const query = buildPropertyByIdQuery("1174572339");
+  test("rejects invalid query parameters with helpful messages", () => {
+    expect(() => buildPropertiesQuery({ minPrice: "abc" })).toThrow(
+      /minPrice must be a valid non-negative price/
+    );
+    expect(() => buildPropertiesQuery({ limit: "0" })).toThrow(/limit must be at least 1/);
+    expect(() => buildPropertiesQuery({ limit: "200" })).toThrow(
+      /limit must be no greater than 100/
+    );
+    expect(() => buildPropertiesQuery({ sortBy: "DROP TABLE rets_property" })).toThrow(
+      /sortBy must be one of/
+    );
+    expect(() => buildPropertiesQuery({ sortBy: "price", sortOrder: "sideways" })).toThrow(
+      /sortOrder must be asc or desc/
+    );
+  });
 
-  assert.equal(
-    query.sql,
-    "SELECT * FROM rets_property WHERE L_ListingID = ? LIMIT 1"
-  );
-  assert.deepEqual(query.values, ["1174572339"]);
-});
+  test("builds property detail query by listing ID", () => {
+    const query = buildPropertyByIdQuery("1174572339");
 
-test("builds open houses query after validating property existence", () => {
-  const query = buildOpenHousesByPropertyIdQuery("1174572339");
+    expect(query.sql).toBe("SELECT * FROM rets_property WHERE L_ListingID = ? LIMIT 1");
+    expect(query.values).toEqual(["1174572339"]);
+  });
 
-  assert.equal(
-    query.propertySql,
-    "SELECT L_ListingID FROM rets_property WHERE L_ListingID = ? LIMIT 1"
-  );
-  assert.deepEqual(query.propertyValues, ["1174572339"]);
-  assert.match(query.openHousesSql, /FROM rets_openhouse/);
-  assert.match(query.openHousesSql, /WHERE L_ListingID = \?/);
-  assert.match(query.openHousesSql, /ORDER BY OpenHouseDate ASC, OH_StartTime ASC/);
-  assert.deepEqual(query.openHousesValues, ["1174572339"]);
-});
+  test("builds open houses query after validating property existence", () => {
+    const query = buildOpenHousesByPropertyIdQuery("1174572339");
 
-test("validates malformed and oversized listing IDs", () => {
-  assert.equal(validateListingId(" 1174572339 "), "1174572339");
-  assert.throws(
-    () => validateListingId("abc/123"),
-    /listing ID may only contain/
-  );
-  assert.throws(
-    () => validateListingId("x".repeat(65)),
-    /listing ID must be 64 characters or fewer/
-  );
-});
+    expect(query.propertySql).toBe(
+      "SELECT L_ListingID FROM rets_property WHERE L_ListingID = ? LIMIT 1"
+    );
+    expect(query.propertyValues).toEqual(["1174572339"]);
+    expect(query.openHousesSql).toMatch(/FROM rets_openhouse/);
+    expect(query.openHousesSql).toMatch(/WHERE L_ListingID = \?/);
+    expect(query.openHousesSql).toMatch(/ORDER BY OpenHouseDate ASC, OH_StartTime ASC/);
+    expect(query.openHousesValues).toEqual(["1174572339"]);
+  });
 
-test("open houses route handles rejected database promises", async () => {
-  const pool = {
-    query: async (sql) => {
-      if (sql.includes("FROM rets_property")) {
-        return [[{ L_ListingID: "1174572339" }]];
-      }
+  test("validates malformed and oversized listing IDs", () => {
+    expect(validateListingId(" 1174572339 ")).toBe("1174572339");
+    expect(() => validateListingId("abc/123")).toThrow(/listing ID may only contain/);
+    expect(() => validateListingId("x".repeat(65))).toThrow(
+      /listing ID must be 64 characters or fewer/
+    );
+  });
 
-      throw new Error("bad open house row");
-    },
-  };
-  const originalConsoleError = console.error;
-  console.error = () => {};
+  test("open houses route handles rejected database promises", async () => {
+    const pool = {
+      query: jest.fn(async (sql) => {
+        if (sql.includes("FROM rets_property")) {
+          return [[{ L_ListingID: "1174572339" }]];
+        }
 
-  try {
-    const result = await getOpenHousesByPropertyIdResult(pool, "1174572339");
+        throw new Error("bad open house row");
+      }),
+    };
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
 
-    assert.equal(result.status, 500);
-    assert.equal(result.body.error, "Failed to load open houses");
-  } finally {
-    console.error = originalConsoleError;
-  }
+    try {
+      const result = await getOpenHousesByPropertyIdResult(pool, "1174572339");
+
+      expect(result.status).toBe(500);
+      expect(result.body.error).toBe("Failed to load open houses");
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
 });

@@ -169,6 +169,8 @@ function buildWhereClause(filters) {
   const conditions = [];
   const values = [];
 
+  // Keep SQL fragments and user values in separate arrays so every user value
+  // is bound through a placeholder instead of being pasted into the SQL string.
   if (filters.city !== undefined) {
     conditions.push(`LOWER(TRIM(${quotedColumns.city})) = LOWER(TRIM(?))`);
     values.push(filters.city);
@@ -243,6 +245,38 @@ function buildPropertiesQuery(rawQuery) {
     limit: filters.limit,
     offset: filters.offset,
   };
+}
+
+async function getPropertiesResult(pool, rawQuery) {
+  let query;
+
+  try {
+    query = buildPropertiesQuery(rawQuery);
+  } catch (error) {
+    return { status: 400, body: { error: error.message } };
+  }
+
+  try {
+    const [[countRow]] = await pool.query(query.countSql, query.countValues);
+    const [results] = await pool.query(query.dataSql, query.dataValues);
+
+    return {
+      status: 200,
+      body: {
+        total: Number(countRow.total),
+        limit: query.limit,
+        offset: query.offset,
+        results,
+      },
+    };
+  } catch (error) {
+    console.error("Property search failed:", error.message);
+
+    return {
+      status: 500,
+      body: { error: "Failed to search properties" },
+    };
+  }
 }
 
 function buildPropertyByIdQuery(rawListingId) {
@@ -341,31 +375,9 @@ function createPropertiesRouter(pool) {
   const router = express.Router();
 
   router.get("/", async (req, res) => {
-    let query;
+    const result = await getPropertiesResult(pool, req.query);
 
-    try {
-      query = buildPropertiesQuery(req.query);
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    try {
-      const [[countRow]] = await pool.query(query.countSql, query.countValues);
-      const [results] = await pool.query(query.dataSql, query.dataValues);
-
-      return res.json({
-        total: Number(countRow.total),
-        limit: query.limit,
-        offset: query.offset,
-        results,
-      });
-    } catch (error) {
-      console.error("Property search failed:", error.message);
-
-      return res.status(500).json({
-        error: "Failed to search properties",
-      });
-    }
+    return res.status(result.status).json(result.body);
   });
 
   router.get("/:id/openhouses", async (req, res) => {
@@ -388,6 +400,7 @@ module.exports = {
   buildPropertyByIdQuery,
   buildPropertiesQuery,
   createPropertiesRouter,
+  getPropertiesResult,
   getOpenHousesByPropertyIdResult,
   getPropertyByIdResult,
   validateListingId,
