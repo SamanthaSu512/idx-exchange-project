@@ -7,7 +7,7 @@
     "build": "react-scripts build",
     "lint": "oxlint",
     "test": "react-scripts test --watchAll=false",
-    "test:coverage": "react-scripts test --watchAll=false --coverage --collectCoverageFrom=src/api/client.js --collectCoverageFrom=src/components/PropertyCard.jsx --collectCoverageFrom=src/components/PropertyFilters.jsx --collectCoverageFrom=src/components/Pagination.jsx --collectCoverageFrom=src/components/paginationItems.js"
+    "test:coverage": "react-scripts test --watchAll=false --coverage --collectCoverageFrom=src/api/client.js --collectCoverageFrom=src/components/PropertyCard.jsx --collectCoverageFrom=src/components/PropertyFilters.jsx --collectCoverageFrom=src/components/PropertyImageCarousel.jsx --collectCoverageFrom=src/components/Pagination.jsx --collectCoverageFrom=src/components/paginationItems.js"
   },
   "dependencies": {
     "ajv": "^8.20.0",

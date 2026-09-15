@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function PropertyImageCarousel({ alt, photos }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedImages, setFailedImages] = useState(new Set());
+  const photosKey = useMemo(() => photos.join('\n'), [photos]);
   const hasPhotos = photos.length > 0;
   const safeIndex = hasPhotos ? Math.min(currentIndex, photos.length - 1) : 0;
   const currentPhoto = hasPhotos ? photos[safeIndex] : '';
   const isCurrentPhotoBroken = failedImages.has(currentPhoto);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setFailedImages(new Set());
+  }, [photosKey]);
 
   function blockCardNavigation(event) {
     event.preventDefault();
