@@ -82,26 +82,27 @@ describe("property query builders", () => {
     });
 
     expect(priceLowToHigh.dataSql).toMatch(
-      /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` ASC, L_ListingID ASC LIMIT \? OFFSET \?/
+      /ORDER BY `L_SystemPrice` ASC, L_ListingID ASC LIMIT \? OFFSET \?/
     );
     expect(priceHighToLow.dataSql).toMatch(
-      /FORCE INDEX \(`idx_rets_property_price_beds`\).*ORDER BY `L_SystemPrice` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+      /ORDER BY `L_SystemPrice` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
     );
     expect(dateListed.dataSql).toMatch(
-      /FORCE INDEX \(`idx_rets_property_listing_contract_date`\).*ORDER BY `ListingContractDate` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
+      /ORDER BY `ListingContractDate` DESC, L_ListingID ASC LIMIT \? OFFSET \?/
     );
+    expect(priceLowToHigh.dataSql).not.toMatch(/FORCE INDEX/);
   });
 
-  test("uses the city plus price composite index for city price sorting", () => {
+  test("combines city filtering and price sorting without requiring forced indexes", () => {
     const query = buildPropertiesQuery({
       city: "Beverly Hills",
       sortBy: "price",
       sortOrder: "asc",
     });
 
-    expect(query.dataSql).toMatch(
-      /FORCE INDEX \(`idx_rets_property_city_price_listingid`\).*ORDER BY `L_SystemPrice` ASC/
-    );
+    expect(query.dataSql).toMatch(/LOWER\(TRIM\(`L_City`\)\) = LOWER\(TRIM\(\?\)\)/);
+    expect(query.dataSql).toMatch(/ORDER BY `L_SystemPrice` ASC/);
+    expect(query.dataSql).not.toMatch(/FORCE INDEX/);
     expect(query.dataValues).toEqual(["Beverly Hills", 20, 0]);
   });
 

@@ -105,6 +105,38 @@ describe("properties routes", () => {
     ]);
   });
 
+  test("GET /api/properties supports city price sorting after fresh SQL imports", async () => {
+    const pool = createPool((sql) => {
+      if (sql.startsWith("SELECT COUNT")) {
+        return [[{ total: 1 }]];
+      }
+
+      return [[sampleProperty]];
+    });
+
+    const response = await request(createApp(pool))
+      .get("/api/properties")
+      .query({
+        city: "Beverly Hills",
+        minPrice: "300000",
+        maxPrice: "1000000",
+        sortBy: "price",
+        sortOrder: "asc",
+      })
+      .expect(200);
+
+    expect(response.body.results).toEqual([sampleProperty]);
+    expect(pool.queries[1].sql).toMatch(/ORDER BY `L_SystemPrice` ASC/);
+    expect(pool.queries[1].sql).not.toMatch(/FORCE INDEX/);
+    expect(pool.queries[1].values).toEqual([
+      "Beverly Hills",
+      300000,
+      1000000,
+      20,
+      0,
+    ]);
+  });
+
   test("GET /api/properties rejects invalid inputs with 400", async () => {
     const pool = createPool(() => {
       throw new Error("database should not be called for invalid input");

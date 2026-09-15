@@ -19,12 +19,6 @@ const SORT_COLUMNS = {
   sqft: "LM_Int2_3",
   beds: "L_Keyword2",
 };
-const SORT_INDEXES = {
-  price: "idx_rets_property_price_beds",
-  dateListed: "idx_rets_property_listing_contract_date",
-  sqft: "idx_rets_property_sqft_listingid",
-  beds: "idx_rets_property_beds_listingid",
-};
 const SORT_ORDERS = new Set(["asc", "desc"]);
 
 function quoteIdentifier(identifier) {
@@ -217,25 +211,12 @@ function buildOrderClause(filters) {
   return ` ORDER BY ${quotedSortColumns[filters.sortBy]} ${direction}, L_ListingID ASC`;
 }
 
-function buildIndexHint(filters) {
-  if (!filters.sortBy) {
-    return "";
-  }
-
-  if (filters.city !== undefined && filters.sortBy === "price") {
-    return " FORCE INDEX (`idx_rets_property_city_price_listingid`)";
-  }
-
-  return ` FORCE INDEX (\`${SORT_INDEXES[filters.sortBy]}\`)`;
-}
-
 function buildPropertiesQuery(rawQuery) {
   const filters = validateQuery(rawQuery);
   const where = buildWhereClause(filters);
   const order = buildOrderClause(filters);
-  const indexHint = buildIndexHint(filters);
   const countSql = `SELECT COUNT(*) AS total FROM rets_property${where.sql}`;
-  const dataSql = `SELECT * FROM rets_property${indexHint}${where.sql}${order} LIMIT ? OFFSET ?`;
+  const dataSql = `SELECT * FROM rets_property${where.sql}${order} LIMIT ? OFFSET ?`;
 
   return {
     countSql,
